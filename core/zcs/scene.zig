@@ -31,6 +31,11 @@ pub const ZiggyScene = struct {
     }
 
     pub fn deinit(self: *ZiggyScene) void {
+        var it = self.entities.valueIterator();
+        while (it.next()) |ent| {
+            self.allocator.free(ent.name);
+        }
+
         self.entities.deinit();
         self.transforms.deinit();
     }
@@ -70,7 +75,10 @@ pub const ZiggyScene = struct {
         _ = self.transforms.remove(id);
         // later: remove from other component maps
 
-        _ = self.entities.remove(id);
+        // remove entity and free its name
+        if (self.entities.remove(id)) |ent| {
+            self.allocator.free(ent.name);
+        }
     }
 
     fn detachFromParent(self: *ZiggyScene, id: EntityId, parent_id: EntityId) void {

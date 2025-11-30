@@ -1,24 +1,50 @@
 const std = @import("std");
 const zcs_scene = @import("zcs/scene.zig");
 const transform_sys = @import("zcs/systems/transforms.zig");
+const time_mod = @import("support/time.zig");
+const log = @import("support/log.zig");
+
+pub const SystemFn = *const fn (*zcs_scene.ZiggyScene, f32) void;
 
 pub const ZiggyRuntime = struct {
     allocator: std.mem.Allocator,
     scene: zcs_scene.ZiggyScene,
+    time: time_mod.Time,
+
+    /// Systems that run once per frame (variable dt)
+    frame_systems: std.ArrayList(SystemFn),
+
+    /// Systems that run at a fixed timestep (fixed dt)
+    fixed_systems: std.ArrayList(SystemFn),
 
     pub fn init(allocator: std.mem.Allocator) !ZiggyRuntime {
         const scene = try zcs_scene.ZiggyScene.init(allocator);
         return ZiggyRuntime{
             .allocator = allocator,
             .scene = scene,
+            .time = time_mod.Time.init(1.0 / 60.0), // 60 Hz fixed-step target
+            .frame_systems = std.ArrayList(SystemFn).init(allocator),
+            .fixed_systems = std.ArrayList(SystemFn).init(allocator),
         };
     }
 
     pub fn deinit(self: *ZiggyRuntime) void {
         self.scene.deinit();
+        self.frame_systems.deinit();
+        self.fixed_systems.deinit();
     }
 
-    pub fn update(self: *ZiggyRuntime, dt: f32) void {
+    /// Register a system to run every frame at variable dt
+    pub fn addFrameSystem(self: *ZiggyRuntime, sys: SystemFn) !void {
+        try self.frame_systems.append(sys);
+    }
+
+    /// Register a system to run at fixed dt
+    pub fn addFixedSystem(self: *ZiggyRuntime, sys: SystemFn) !void {
+        try self.fixed_systems.append(sys);
+    }
+
+    pub fn update(self: *ZiggyRuntime) void {
         // Order of operations; later this grows:
         // 1. input
         // 2. physics
@@ -27,9 +53,35 @@ pub const ZiggyRuntime = struct {
         // 5. user game logic
         // 6. transforms (world)
         // 7. render
-        std.debug.print("dt: ", .{dt});
+        self.time.update();
+
+        const dt_frame: f32 = self.time.delta;
+
+        // ───────────────────────────────
+        // 1. RUN FRAME-BASED SYSTEMS
+        //    (input, UI, animation, movement)
+        // ───────────────────────────────
+        for (self.frame_systems.items) |sys| {
+            sys(&self.scene, dt_frame);
+        }
+
+        // ───────────────────────────────
+        // 2. RUN FIXED-STEP SYSTEMS
+        //    (physics, deterministic logic)
+        // ───────────────────────────────
+        while (self.time.stepAvailable()) {
+            const dt_fixed: f32 = self.time.consumeFixedStep();
+
+            for (self.fixed_systems.items) |sys| {
+                sys(&self.scene, dt_fixed);
+            }
+        }
 
         transform_sys.updateWorldTransforms(&self.scene);
         // render2D/3D to be added here later
+    }
+
+    pub fn getTime(self: *ZiggyRuntime) *time_mod.Time {
+        return &self.time;
     }
 };

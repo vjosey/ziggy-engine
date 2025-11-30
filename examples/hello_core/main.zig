@@ -8,6 +8,7 @@ pub fn main() !void {
 
     const runtime_mod = ziggy_core.runtime;
     const comps = ziggy_core.zcs.components;
+    const log = ziggy_core.support.log;
 
     var rt = try runtime_mod.ZiggyRuntime.init(allocator);
     defer rt.deinit();
@@ -22,17 +23,19 @@ pub fn main() !void {
         .world_matrix = undefined, // will be filled by the transform system
     });
 
-    const dt: f32 = 1.0 / 60.0;
-
     var i: usize = 0;
     while (i < 3) : (i += 1) {
-        rt.update(dt);
+        rt.update();
 
-        if (scene.getTransform(e)) |t| {
-            std.debug.print(
-                "Frame {d}, dt={d}: world pos = ({d}, {d}, {d})\n",
-                .{ i, dt, t.position[0], t.position[1], t.position[2] },
+        const t = rt.getTime();
+        if (scene.getTransform(e)) |tr| {
+            log.info(
+                "Frame {d}, dt={d:.5}, elapsed={d:.5}: world pos = ({d:.3}, {d:.3}, {d:.3})",
+                .{ i, t.delta, t.elapsed, tr.position[0], tr.position[1], tr.position[2] },
             );
         }
+
+        // Sleep a bit so dt isn't basically zero (roughly 60Hz)
+        std.time.sleep(16_666_667); // ~16.6 ms
     }
 }
