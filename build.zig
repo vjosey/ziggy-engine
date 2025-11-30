@@ -27,9 +27,26 @@ pub fn build(b: *std.Build) void {
     ziggy_studio.root_module.addImport("ziggy_core", ziggy_core_mod);
     b.installArtifact(ziggy_studio);
 
+    // 🔗 GLFW + OpenGL – adjust to your paths
+    const glfw_path = "C:/Users/Admin/Downloads/glfw-3.4.bin.WIN64";
+
+    // =============================================================================
+
+    // Add GLFW paths
+    const include_path = glfw_path ++ "/include";
+    const lib_path = glfw_path ++ "/lib-mingw-w64";
+
+    ziggy_studio.addIncludePath(.{ .cwd_relative = include_path });
+    ziggy_studio.addLibraryPath(.{ .cwd_relative = lib_path });
+
+    ziggy_studio.linkSystemLibrary("glfw3");
+    ziggy_studio.linkSystemLibrary("opengl32");
+    ziggy_studio.linkSystemLibrary("gdi32");
+    ziggy_studio.linkSystemLibrary("user32");
+
     const run_studio = b.addRunArtifact(ziggy_studio);
     if (b.args) |args| run_studio.addArgs(args);
-    b.step("run-studio", "Run Ziggy Studio").dependOn(&run_studio.step);
+    b.step("ziggy-studio", "Run Ziggy Studio").dependOn(&run_studio.step);
 
     //
     // ────────────────────────────────────────────────
