@@ -49,6 +49,7 @@ pub const ZiggyScene = struct {
     transforms: std.AutoHashMap(EntityId, comps.Transform),
     velocities: std.AutoHashMap(EntityId, comps.Velocity),
     cameras: std.AutoHashMap(EntityId, comps.Camera),
+    sprites2d: std.AutoHashMap(EntityId, comps.Sprite2D),
 
     pub fn init(allocator: std.mem.Allocator) !ZiggyScene {
         return ZiggyScene{
@@ -58,6 +59,7 @@ pub const ZiggyScene = struct {
             .transforms = std.AutoHashMap(EntityId, comps.Transform).init(allocator),
             .velocities = std.AutoHashMap(EntityId, comps.Velocity).init(allocator),
             .cameras = std.AutoHashMap(EntityId, comps.Camera).init(allocator),
+            .sprites2d = std.AutoHashMap(EntityId, comps.Sprite2D).init(allocator),
         };
     }
 
@@ -71,6 +73,7 @@ pub const ZiggyScene = struct {
         self.transforms.deinit();
         self.velocities.deinit();
         self.cameras.deinit();
+        self.sprites2d.deinit();
     }
 
     pub fn createEntity(self: *ZiggyScene, name: []const u8) !EntityId {
@@ -320,5 +323,13 @@ pub const ZiggyScene = struct {
 
     pub fn getCamera(self: *ZiggyScene, id: EntityId) ?*comps.Camera {
         return self.cameras.getPtr(id);
+    }
+
+    pub fn addSprite2D(self: *ZiggyScene, id: EntityId, sprite: comps.Sprite2D) !void {
+        try self.sprites2d.put(id, sprite);
+    }
+
+    pub fn getSprite2D(self: *ZiggyScene, id: EntityId) ?*comps.Sprite2D {
+        return self.sprites2d.getPtr(id);
     }
 };

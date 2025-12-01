@@ -37,6 +37,10 @@ pub fn main() !void {
     const player = try scene.createEntity("Player");
     try scene.addTransform(player, comps.Transform{});
     try scene.addVelocity(player, comps.Velocity{ .value = .{ 0, 0, 0 } });
+    try scene.addSprite2D(player, comps.Sprite2D{
+        .size = .{ 64.0, 64.0 },
+        .color = .{ 0.2, 0.7, 1.0, 1.0 },
+    });
 
     while (!win.shouldClose()) {
         // 1. Poll events first
@@ -55,6 +59,19 @@ pub fn main() !void {
         if (input.isKeyDown(input_mod.Key.A)) dir[0] -= 1;
         if (input.isKeyDown(input_mod.Key.D)) dir[0] += 1;
 
+        if (input.isKeyDown(input_mod.Key.Up)) dir[1] += 1;
+        if (input.isKeyDown(input_mod.Key.Down)) dir[1] -= 1;
+        if (input.isKeyDown(input_mod.Key.Left)) dir[0] -= 1;
+        if (input.isKeyDown(input_mod.Key.Right)) dir[0] += 1;
+
+        // Normalize + apply speed so diagonal isn't faster
+        const speed: f32 = 300.0; // pixels per second (tweak this to taste)
+        if (dir[0] != 0 or dir[1] != 0) {
+            const len = @sqrt(dir[0] * dir[0] + dir[1] * dir[1]);
+            dir[0] = dir[0] / len * speed;
+            dir[1] = dir[1] / len * speed;
+        }
+
         if (scene.getVelocity(player)) |v| {
             v.value = dir;
         }
@@ -71,12 +88,31 @@ pub fn main() !void {
 
         renderer.beginFrame(fb_width, fb_height);
 
-        const rect_w: f32 = 100;
-        const rect_h: f32 = 80;
-        const x: f32 = (fb_width - rect_w) / 2.0;
-        const y: f32 = (fb_height - rect_h) / 2.0;
+        // const rect_w: f32 = 100;
+        // const rect_h: f32 = 80;
+        // const x: f32 = (fb_width - rect_w) / 2.0;
+        // const y: f32 = (fb_height - rect_h) / 2.0;
 
-        renderer.drawRect(x, y, rect_w, rect_h, .{ 0.2, 0.7, 1.0, 1.0 });
+        // renderer.drawRect(x, y, rect_w, rect_h, .{ 0.2, 0.7, 1.0, 1.0 });
+
+        // Draw all entities that have Transform + Sprite2D
+        var it = scene.sprites2d.iterator();
+        while (it.next()) |entry| {
+            const id = entry.key_ptr.*;
+            const sprite = entry.value_ptr;
+
+            if (scene.getTransform(id)) |t| {
+                const wx = t.position[0];
+                const wy = t.position[1];
+
+                const x = wx;
+                const y = wy;
+                const w = sprite.size[0];
+                const h = sprite.size[1];
+
+                renderer.drawRect(x, y, w, h, sprite.color);
+            }
+        }
 
         // Optional: debug log
         if (scene.getTransform(player)) |t| {

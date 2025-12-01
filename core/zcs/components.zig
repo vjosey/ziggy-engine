@@ -52,3 +52,11 @@ pub const Camera = struct {
         0, 0, 0, 1,
     },
 };
+
+pub const Sprite2D = struct {
+    /// Size in screen/world units (for now, treat as screen pixels)
+    size: [2]f32 = .{ 32.0, 32.0 },
+
+    /// RGBA color
+    color: [4]f32 = .{ 1.0, 1.0, 1.0, 1.0 },
+};
