@@ -100,3 +100,72 @@ pub fn mat4FromTrs(pos: Vec3, rot: Quat, scale: Vec3) Mat4 {
 pub fn quatIdentity() Quat {
     return .{ 0.0, 0.0, 0.0, 1.0 };
 }
+
+pub fn vec3Sub(a: Vec3, b: Vec3) Vec3 {
+    return .{
+        a[0] - b[0],
+        a[1] - b[1],
+        a[2] - b[2],
+    };
+}
+
+pub fn vec3Normalize(v: Vec3) Vec3 {
+    const len_sq = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+    if (len_sq == 0) return .{ 0, 0, 0 };
+    const inv_len = 1.0 / @sqrt(len_sq);
+    return .{ v[0] * inv_len, v[1] * inv_len, v[2] * inv_len };
+}
+
+pub fn vec3Cross(a: Vec3, b: Vec3) Vec3 {
+    return .{
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+    };
+}
+
+pub fn dot3(a: Vec3, b: Vec3) f32 {
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
+/// Standard right-handed lookAt (eye → target, with up)
+pub fn mat4LookAt(eye: Vec3, target: Vec3, up: Vec3) Mat4 {
+    const f = vec3Normalize(vec3Sub(target, eye)); // forward
+    const s = vec3Normalize(vec3Cross(f, up)); // right
+    const u = vec3Cross(s, f); // recomputed up
+
+    // Column-major:
+    // [  s.x   u.x  -f.x   0
+    //    s.y   u.y  -f.y   0
+    //    s.z   u.z  -f.z   0
+    //   -dot(s,eye) -dot(u,eye) dot(f,eye) 1 ]
+    const sx = s[0];
+    const sy = s[1];
+    const sz = s[2];
+    const ux = u[0];
+    const uy = u[1];
+    const uz = u[2];
+    const fx = f[0];
+    const fy = f[1];
+    const fz = f[2];
+
+    return .{
+        sx,            ux,            -fx,          0.0,
+        sy,            uy,            -fy,          0.0,
+        sz,            uz,            -fz,          0.0,
+        -dot3(s, eye), -dot3(u, eye), dot3(f, eye), 1.0,
+    };
+}
+
+/// Perspective projection (OpenGL-style, right-handed, column-major)
+pub fn mat4Perspective(fov_y_radians: f32, aspect: f32, z_near: f32, z_far: f32) Mat4 {
+    const f = 1.0 / @tan(fov_y_radians / 2.0);
+    const nf = 1.0 / (z_near - z_far);
+
+    return .{
+        f / aspect, 0, 0,                       0,
+        0,          f, 0,                       0,
+        0,          0, (z_far + z_near) * nf,   -1,
+        0,          0, 2 * z_far * z_near * nf, 0,
+    };
+}

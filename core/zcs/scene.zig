@@ -48,6 +48,7 @@ pub const ZiggyScene = struct {
     // component storage
     transforms: std.AutoHashMap(EntityId, comps.Transform),
     velocities: std.AutoHashMap(EntityId, comps.Velocity),
+    cameras: std.AutoHashMap(EntityId, comps.Camera),
 
     pub fn init(allocator: std.mem.Allocator) !ZiggyScene {
         return ZiggyScene{
@@ -56,6 +57,7 @@ pub const ZiggyScene = struct {
             .entities = std.AutoHashMap(EntityId, Entity).init(allocator),
             .transforms = std.AutoHashMap(EntityId, comps.Transform).init(allocator),
             .velocities = std.AutoHashMap(EntityId, comps.Velocity).init(allocator),
+            .cameras = std.AutoHashMap(EntityId, comps.Camera).init(allocator),
         };
     }
 
@@ -68,6 +70,7 @@ pub const ZiggyScene = struct {
         self.entities.deinit();
         self.transforms.deinit();
         self.velocities.deinit();
+        self.cameras.deinit();
     }
 
     pub fn createEntity(self: *ZiggyScene, name: []const u8) !EntityId {
@@ -309,5 +312,13 @@ pub const ZiggyScene = struct {
             .scene = self,
             .it = self.velocities.iterator(),
         };
+    }
+
+    pub fn addCamera(self: *ZiggyScene, id: EntityId, cam: comps.Camera) !void {
+        try self.cameras.put(id, cam);
+    }
+
+    pub fn getCamera(self: *ZiggyScene, id: EntityId) ?*comps.Camera {
+        return self.cameras.getPtr(id);
     }
 };

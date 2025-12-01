@@ -4,6 +4,7 @@ const time_mod = @import("support/time.zig");
 const log = @import("support/log.zig");
 const movement_system = @import("zcs/systems/movement.zig");
 const transform_system = @import("zcs/systems/transforms.zig");
+const camera_system = @import("zcs/systems/camera.zig");
 const input_mod = @import("support/input_glfw.zig");
 
 pub const SystemFn = *const fn (*zcs_scene.ZiggyScene, f32) void;
