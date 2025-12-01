@@ -6,6 +6,7 @@ const window = ziggy_core.gfx.window_glfw;
 const log = ziggy_core.support.log;
 const input_mod = ziggy_core.support.input;
 const comps = ziggy_core.zcs.components;
+const renderer2d_mod = ziggy_core.gfx.renderer2d;
 
 pub fn main() !void {
     std.debug.print("Ziggy Studio stub running.\n", .{});
@@ -27,6 +28,7 @@ pub fn main() !void {
     defer win.deinit();
 
     const scene = &rt.scene;
+    var renderer = renderer2d_mod.Renderer2D.init(.{ 0.05, 0.05, 0.10, 1.0 });
 
     const e = try scene.createEntity("EditorTest");
     try scene.addTransform(e, comps.Transform{});
@@ -37,6 +39,10 @@ pub fn main() !void {
     try scene.addVelocity(player, comps.Velocity{ .value = .{ 0, 0, 0 } });
 
     while (!win.shouldClose()) {
+        // 1. Poll events first
+        win.pollEvents();
+
+        // 2. Input
         if (win.getHandle()) |handle| {
             rt.getInput().updateFromGlfw(handle);
         }
@@ -53,23 +59,34 @@ pub fn main() !void {
             v.value = dir;
         }
 
-        // Update core runtime (your ECS, systems, etc.)
+        // 3. Update ECS / systems
         rt.update();
 
-        // log the position to prove it’s working
+        // 4. Begin frame on window (sets up context / maybe clears)
+        win.beginFrame();
+
+        // 5. 2D renderer work
+        const fb_width: i32 = 1280;
+        const fb_height: i32 = 720;
+
+        renderer.beginFrame(fb_width, fb_height);
+
+        const rect_w: f32 = 100;
+        const rect_h: f32 = 80;
+        const x: f32 = (fb_width - rect_w) / 2.0;
+        const y: f32 = (fb_height - rect_h) / 2.0;
+
+        renderer.drawRect(x, y, rect_w, rect_h, .{ 0.2, 0.7, 1.0, 1.0 });
+
+        // Optional: debug log
         if (scene.getTransform(player)) |t| {
             log.info("Player pos = ({d:.2}, {d:.2}, {d:.2})", .{
                 t.position[0], t.position[1], t.position[2],
             });
         }
 
-        // Render (for now, just clear)
-        win.beginFrame();
-        // TODO: draw runtime/scene here later
+        // 6. Present
         win.endFrame();
-
-        // Poll events
-        win.pollEvents();
     }
 
     std.debug.print("Created entity {d} in studio runtime.\n", .{e});

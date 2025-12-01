@@ -33,6 +33,7 @@ pub const ZiggyRuntime = struct {
         // register systems
         try rt.addFrameSystem(movement_system.update);
         try rt.addFrameSystem(transform_system.update);
+        try rt.addFrameSystem(camera_system.update);
 
         // later: try rt.addFixedSystem(physics_system.update);
 

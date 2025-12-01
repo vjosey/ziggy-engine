@@ -11,6 +11,7 @@ pub const zcs = struct {
 
 pub const gfx = struct {
     pub const window_glfw = @import("gfx/window_glfw.zig");
+    pub const renderer2d = @import("gfx/renderer2d.zig");
 };
 
 pub const support = struct {
