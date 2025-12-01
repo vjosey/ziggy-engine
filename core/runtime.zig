@@ -1,8 +1,9 @@
 const std = @import("std");
 const zcs_scene = @import("zcs/scene.zig");
-const transform_sys = @import("zcs/systems/transforms.zig");
 const time_mod = @import("support/time.zig");
 const log = @import("support/log.zig");
+const movement_system = @import("zcs/systems/movement.zig");
+const transform_sys = @import("zcs/systems/transforms.zig");
 
 pub const SystemFn = *const fn (*zcs_scene.ZiggyScene, f32) void;
 
@@ -19,13 +20,20 @@ pub const ZiggyRuntime = struct {
 
     pub fn init(allocator: std.mem.Allocator) !ZiggyRuntime {
         const scene = try zcs_scene.ZiggyScene.init(allocator);
-        return ZiggyRuntime{
+        var rt = ZiggyRuntime{
             .allocator = allocator,
             .scene = scene,
-            .time = time_mod.Time.init(1.0 / 60.0), // 60 Hz fixed-step target
+            .time = time_mod.Time.init(1.0 / 60.0),
             .frame_systems = std.ArrayList(SystemFn).init(allocator),
             .fixed_systems = std.ArrayList(SystemFn).init(allocator),
         };
+
+        // register systems
+        try rt.addFrameSystem(movement_system.update);
+        //try rt.addFrameSystem(transform_sys.updateWorldTransforms);
+        // later: try rt.addFixedSystem(physics_system.update);
+
+        return rt;
     }
 
     pub fn deinit(self: *ZiggyRuntime) void {
@@ -76,7 +84,7 @@ pub const ZiggyRuntime = struct {
                 sys(&self.scene, dt_fixed);
             }
         }
-
+        // todo: register in init instead
         transform_sys.updateWorldTransforms(&self.scene);
         // render2D/3D to be added here later
     }

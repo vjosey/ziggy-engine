@@ -10,7 +10,34 @@ pub const Entity = struct {
     parent: ?EntityId = null,
     first_child: ?EntityId = null,
     next_sibling: ?EntityId = null,
+
+    layer: u8 = 0,
+    tags: u32 = 0,
 };
+
+pub const Tag = enum(u5) {
+    Player,
+    Enemy,
+    Projectile,
+    UI,
+    Environment,
+    Ground,
+    Interactable,
+    Collectable,
+    Destructible,
+    Untagged,
+    Respawn,
+    EditorOnly,
+    MainCamera,
+    Finish,
+    GameController,
+    Trigger,
+    // add more as needed
+};
+
+fn tagMask(tag: Tag) u32 {
+    return @as(u32, 1) << @intFromEnum(tag);
+}
 
 pub const ZiggyScene = struct {
     allocator: std.mem.Allocator,
@@ -20,6 +47,7 @@ pub const ZiggyScene = struct {
 
     // component storage
     transforms: std.AutoHashMap(EntityId, comps.Transform),
+    velocities: std.AutoHashMap(EntityId, comps.Velocity),
 
     pub fn init(allocator: std.mem.Allocator) !ZiggyScene {
         return ZiggyScene{
@@ -27,6 +55,7 @@ pub const ZiggyScene = struct {
             .next_entity_id = 1,
             .entities = std.AutoHashMap(EntityId, Entity).init(allocator),
             .transforms = std.AutoHashMap(EntityId, comps.Transform).init(allocator),
+            .velocities = std.AutoHashMap(EntityId, comps.Velocity).init(allocator),
         };
     }
 
@@ -38,6 +67,7 @@ pub const ZiggyScene = struct {
 
         self.entities.deinit();
         self.transforms.deinit();
+        self.velocities.deinit();
     }
 
     pub fn createEntity(self: *ZiggyScene, name: []const u8) !EntityId {
@@ -56,6 +86,71 @@ pub const ZiggyScene = struct {
         return id;
     }
 
+    pub const Error = error{
+        UnknownEntity,
+    };
+
+    pub fn setLayer(self: *ZiggyScene, id: EntityId, layer: u8) !void {
+        var ent = self.entities.get(id) orelse return Error.UnknownEntity;
+        ent.layer = layer;
+        try self.entities.put(id, ent);
+    }
+
+    pub fn getLayer(self: *ZiggyScene, id: EntityId) ?u8 {
+        if (self.entities.get(id)) |ent| {
+            return ent.layer;
+        }
+        return null;
+    }
+
+    pub fn addTag(self: *ZiggyScene, id: EntityId, tag: Tag) !void {
+        var ent = self.entities.get(id) orelse return Error.UnknownEntity;
+        ent.tags |= tagMask(tag);
+        try self.entities.put(id, ent);
+    }
+
+    pub fn removeTag(self: *ZiggyScene, id: EntityId, tag: Tag) !void {
+        var ent = self.entities.get(id) orelse return Error.UnknownEntity;
+        ent.tags &= ~tagMask(tag);
+        try self.entities.put(id, ent);
+    }
+
+    pub fn hasTag(self: *ZiggyScene, id: EntityId, tag: Tag) bool {
+        if (self.entities.get(id)) |ent| {
+            return (ent.tags & tagMask(tag)) != 0;
+        }
+        return false;
+    }
+
+    pub const TagQueryItem = struct {
+        id: EntityId,
+        entity: *Entity,
+    };
+
+    pub const TagQuery = struct {
+        it: std.AutoHashMap(EntityId, Entity).Iterator,
+        mask: u32,
+
+        pub fn next(self: *TagQuery) ?TagQueryItem {
+            while (self.it.next()) |entry| {
+                const ent = entry.value_ptr;
+                if ((ent.tags & self.mask) != 0) {
+                    return TagQueryItem{
+                        .id = entry.key_ptr.*,
+                        .entity = ent,
+                    };
+                }
+            }
+            return null;
+        }
+    };
+
+    pub fn queryByTag(self: *ZiggyScene, tag: Tag) TagQuery {
+        return .{
+            .it = self.entities.iterator(),
+            .mask = tagMask(tag),
+        };
+    }
     pub fn destroyEntity(self: *ZiggyScene, id: EntityId) void {
         if (self.entities.get(id)) |ent| {
             // detach from parent and siblings
@@ -141,9 +236,78 @@ pub const ZiggyScene = struct {
         return self.transforms.getPtr(id);
     }
 
+    pub fn addVelocity(self: *ZiggyScene, id: EntityId, v: comps.Velocity) !void {
+        try self.velocities.put(id, v);
+    }
+
+    pub fn getVelocity(self: *ZiggyScene, id: EntityId) ?*comps.Velocity {
+        return self.velocities.getPtr(id);
+    }
+
     fn dupString(self: *ZiggyScene, s: []const u8) ![]u8 {
         const buf = try self.allocator.alloc(u8, s.len);
         @memcpy(buf, s);
         return buf;
+    }
+
+    // ─────────────────────────────────────────────
+    // Simple query API
+    // ─────────────────────────────────────────────
+
+    pub const TransformQueryItem = struct {
+        id: EntityId,
+        transform: *comps.Transform,
+    };
+
+    pub const TransformQuery = struct {
+        it: std.AutoHashMap(EntityId, comps.Transform).Iterator,
+
+        pub fn next(self: *TransformQuery) ?TransformQueryItem {
+            if (self.it.next()) |entry| {
+                return TransformQueryItem{
+                    .id = entry.key_ptr.*,
+                    .transform = entry.value_ptr,
+                };
+            }
+            return null;
+        }
+    };
+
+    pub fn queryTransforms(self: *ZiggyScene) TransformQuery {
+        return .{ .it = self.transforms.iterator() };
+    }
+
+    pub const MoveQueryItem = struct {
+        id: EntityId,
+        transform: *comps.Transform,
+        velocity: *comps.Velocity,
+    };
+
+    pub const MoveQuery = struct {
+        scene: *ZiggyScene,
+        it: std.AutoHashMap(EntityId, comps.Velocity).Iterator,
+
+        pub fn next(self: *MoveQuery) ?MoveQueryItem {
+            while (self.it.next()) |entry| {
+                const id = entry.key_ptr.*;
+                const vel = entry.value_ptr;
+
+                if (self.scene.getTransform(id)) |t| {
+                    return MoveQueryItem{
+                        .id = id,
+                        .transform = t,
+                        .velocity = vel,
+                    };
+                }
+            }
+            return null;
+        }
+    };
+
+    pub fn queryMoveables(self: *ZiggyScene) MoveQuery {
+        return .{
+            .scene = self,
+            .it = self.velocities.iterator(),
+        };
     }
 };

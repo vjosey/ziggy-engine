@@ -16,3 +16,7 @@ pub const Transform = struct {
         0, 0, 0, 1,
     },
 };
+
+pub const Velocity = struct {
+    value: [3]f32,
+};

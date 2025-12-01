@@ -1,5 +1,6 @@
 const std = @import("std");
 const ziggy_core = @import("ziggy_core");
+const zcs_scene = ziggy_core.zcs.scene;
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -20,14 +21,27 @@ pub fn main() !void {
         .position = .{ 1.0, 2.0, 0.0 },
         .rotation = .{ 0.0, 0.0, 0.0, 1.0 },
         .scale = .{ 1.0, 1.0, 1.0 },
-        .world_matrix = undefined, // will be filled by the transform system
+        .world_matrix = undefined,
     });
 
-    var i: usize = 0;
-    while (i < 3) : (i += 1) {
-        rt.update();
+    // 👇 give the Player a velocity so movement_system can do its thing
+    try scene.addVelocity(e, comps.Velocity{
+        .value = .{ 1.0, 0.0, 0.0 }, // 1 unit/sec in +X
+    });
 
+    // Set tags/layers
+    try scene.setLayer(e, 1); // e.g. gameplay layer 1
+    try scene.addTag(e, zcs_scene.Tag.Player);
+
+    var tq = scene.queryByTag(zcs_scene.Tag.Player);
+    while (tq.next()) |item| {
+        log.info("Player entity id={d}, layer={d}", .{ item.id, item.entity.layer });
+    }
+    var i: usize = 0;
+    while (i < 5) : (i += 1) {
+        rt.update();
         const t = rt.getTime();
+
         if (scene.getTransform(e)) |tr| {
             log.info(
                 "Frame {d}, dt={d:.5}, elapsed={d:.5}: world pos = ({d:.3}, {d:.3}, {d:.3})",
@@ -35,7 +49,6 @@ pub fn main() !void {
             );
         }
 
-        // Sleep a bit so dt isn't basically zero (roughly 60Hz)
-        std.time.sleep(16_666_667); // ~16.6 ms
+        std.time.sleep(16_666_667); // ~60Hz
     }
 }
