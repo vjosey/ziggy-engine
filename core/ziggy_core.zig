@@ -16,4 +16,6 @@ pub const gfx = struct {
 pub const support = struct {
     pub const time = @import("support/time.zig");
     pub const log = @import("support/log.zig");
+    pub const math = @import("support/math.zig");
+    pub const input = @import("support/input_glfw.zig");
 };

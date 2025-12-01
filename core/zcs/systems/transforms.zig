@@ -1,74 +1,53 @@
-const std = @import("std");
 const zcs_scene = @import("../scene.zig");
-const comps = @import("../components.zig");
+const math = @import("../../support/math.zig");
 
-pub fn updateWorldTransforms(scene: *zcs_scene.ZiggyScene) void {
-    // update all root entities (no parent)
+const ZiggyScene = zcs_scene.ZiggyScene;
+const Mat4 = math.Mat4;
+
+pub fn update(scene: *ZiggyScene, dt: f32) void {
+    _ = dt; // not used for now
+
+    // Find roots (entities with no parent) and update hierarchy from each.
     var it = scene.entities.iterator();
     while (it.next()) |entry| {
         const id = entry.key_ptr.*;
-        const ent = entry.value_ptr.*;
+        const ent = entry.value_ptr;
         if (ent.parent == null) {
-            updateSubtree(scene, id, null);
+            updateEntityRecursive(scene, id, null);
         }
     }
 }
 
-fn updateSubtree(scene: *zcs_scene.ZiggyScene, id: zcs_scene.EntityId, parent_world: ?[16]f32) void {
-    const ent = scene.entities.get(id) orelse return;
-    if (scene.getTransform(id)) |t| {
-        // For now: build a simple translation matrix; later add rotation/scale
-        var world = identityMat4();
-        world[12] = t.position[0];
-        world[13] = t.position[1];
-        world[14] = t.position[2];
+fn updateEntityRecursive(
+    scene: *ZiggyScene,
+    id: zcs_scene.EntityId,
+    parent_world: ?*const Mat4,
+) void {
+    var this_world_ptr: ?*const Mat4 = parent_world;
+
+    // Build local TRS and compute this entity's world matrix if it has a Transform
+    if (scene.transforms.getPtr(id)) |t| {
+        const local = math.mat4FromTrs(t.position, t.rotation, t.scale);
 
         if (parent_world) |pw| {
-            t.world_matrix = mulMat4(pw, world);
+            t.world_matrix = math.mat4Mul(pw.*, local);
         } else {
-            t.world_matrix = world;
+            t.world_matrix = local;
         }
 
-        // recurse into children
-        var child_opt = ent.first_child;
-        while (child_opt) |child_id| {
-            updateSubtree(scene, child_id, t.world_matrix);
-            const child_ent = scene.entities.get(child_id).?;
-            child_opt = child_ent.next_sibling;
-        }
-    } else {
-        // no transform; still traverse children
-        var child_opt = ent.first_child;
-        while (child_opt) |child_id| {
-            updateSubtree(scene, child_id, parent_world);
-            const child_ent = scene.entities.get(child_id).?;
-            child_opt = child_ent.next_sibling;
-        }
+        this_world_ptr = &t.world_matrix;
     }
-}
 
-// Very barebones mat4 helpers (column-major assumed)
-fn identityMat4() [16]f32 {
-    return .{
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1,
-    };
-}
+    // Recurse into children
+    const ent = scene.entities.get(id) orelse return;
+    var child_opt = ent.first_child;
 
-fn mulMat4(a: [16]f32, b: [16]f32) [16]f32 {
-    var out: [16]f32 = undefined;
-    var r: usize = 0;
-    while (r < 4) : (r += 1) {
-        var c: usize = 0;
-        while (c < 4) : (c += 1) {
-            out[c + r * 4] =
-                a[0 + r * 4] * b[c + 0 * 4] +
-                a[1 + r * 4] * b[c + 1 * 4] +
-                a[2 + r * 4] * b[c + 2 * 4] +
-                a[3 + r * 4] * b[c + 3 * 4];
-        }
+    while (child_opt) |child_id| {
+        const child_ent = scene.entities.get(child_id).?;
+        const next = child_ent.next_sibling;
+
+        updateEntityRecursive(scene, child_id, this_world_ptr);
+
+        child_opt = next;
     }
-    return out;
 }

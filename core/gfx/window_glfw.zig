@@ -1,8 +1,8 @@
 const std = @import("std");
 
 // Opaque GLFW types
-const GLFWwindow = opaque {};
-const GLFWmonitor = opaque {};
+pub const GLFWwindow = opaque {};
+pub const GLFWmonitor = opaque {};
 
 // ---- GLFW externs ----
 extern fn glfwInit() c_int;
@@ -90,6 +90,10 @@ pub const GlfwWindow = struct {
 
     pub fn pollEvents(_: *GlfwWindow) void {
         glfwPollEvents();
+    }
+
+    pub fn getHandle(self: *GlfwWindow) ?*GLFWwindow {
+        return self.handle;
     }
 
     pub fn beginFrame(self: *GlfwWindow) void {
