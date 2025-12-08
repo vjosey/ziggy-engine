@@ -7,6 +7,7 @@ const log = ziggy_core.support.log;
 const input_mod = ziggy_core.support.input;
 const comps = ziggy_core.zcs.components;
 const renderer2d_mod = ziggy_core.gfx.renderer2d;
+const ziggy_db = @import("ziggy_db");
 
 pub fn main() !void {
     std.debug.print("Ziggy Studio stub running.\n", .{});
@@ -124,7 +125,7 @@ pub fn main() !void {
         // 6. Present
         win.endFrame();
     }
-
+    log.info("Hello from {s}\n", .{ziggy_db.version()});
     std.debug.print("Created entity {d} in studio runtime.\n", .{e});
     log.debug("Ziggy Studio exiting normally.\n", .{});
 }

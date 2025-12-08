@@ -1,0 +1,27 @@
+{
+  "table": "enemies",
+  "fields": {
+    "hp":       { "type": "Int" },
+    "speed":    { "type": "Float" },
+    "name":     { "type": "String" },
+    "rarity":   { "type": "Enum", "enum": "Rarity" },
+    "weapon":   { "type": "Ref", "table": "weapons" },
+    "tags":     { "type": "List", "element_type": "String" },
+    "loot":     { "type": "List", "element_type": "Ref", "table": "items" },
+    "meta":     { "type": "Json" }
+  },
+  "rows": {
+    "zombie": {
+      "hp": 50,
+      "speed": 0.8,
+      "name": "Zombie",
+      "rarity": "Common",
+      "weapon": "rusty_sword",
+      "tags": ["undead", "melee"],
+      "loot": ["rotten_flesh"],
+      "meta": { "aggro_range": 5.0 }
+    }
+
+    
+  }
+}

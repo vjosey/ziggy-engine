@@ -1,5 +1,6 @@
 const std = @import("std");
 const ziggy_core = @import("ziggy_core");
+const zdb = @import("ziggy_db");
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -10,6 +11,9 @@ pub fn main() !void {
     const comps = ziggy_core.zcs.components;
     const log = ziggy_core.support.log;
 
+    try dataConnection(allocator);
+
+    //runtime setup
     var rt = try runtime_mod.ZiggyRuntime.init(allocator);
     defer rt.deinit();
 
@@ -56,5 +60,74 @@ pub fn main() !void {
         }
 
         std.time.sleep(16_666_667);
+    }
+}
+
+fn dataConnection(allocator: std.mem.Allocator) !void {
+    // ----- load database from the example data folder -----
+    const options = zdb.LoadOptions{
+        .verbose = true, // see what it's loading
+        .validate_refs = false, // no refs yet
+        .validate_enums = false, // no enums yet
+    };
+
+    // when running from project root via `zig build run-example`,
+    // this path is relative to the root:
+    var db = try zdb.loadFromDir(allocator, "examples/hello_core/data", options);
+    defer zdb.deinit(&db, allocator);
+
+    const stdout = std.io.getStdOut().writer();
+
+    // ----- get the "enemies" table -----
+    const enemies = zdb.getTable(&db, "enemies") orelse {
+        try stdout.print("No 'enemies' table found!\n", .{});
+        return;
+    };
+
+    try stdout.print("Loaded table: {s}\n", .{enemies.name});
+    try stdout.print("Fields:\n", .{});
+
+    for (enemies.fields, 0..) |field, i| {
+        try stdout.print("  {d}: {s}\n", .{ i, field.name });
+    }
+
+    // ----- print all rows -----
+    try stdout.print("\nRows:\n", .{});
+    for (enemies.rows) |row| {
+        try stdout.print("  key={s}", .{row.key});
+
+        // find and print hp + name using helper
+        if (zdb.getFieldValueByName(enemies, &row, "hp")) |v_hp| {
+            switch (v_hp.*) {
+                .Int => |hp| try stdout.print(", hp={d}", .{hp}),
+                else => try stdout.print(", hp=<not Int>", .{}),
+            }
+        }
+
+        if (zdb.getFieldValueByName(enemies, &row, "name")) |v_name| {
+            switch (v_name.*) {
+                .String => |name| try stdout.print(", name={s}", .{name}),
+                else => try stdout.print(", name=<not String>", .{}),
+            }
+        }
+
+        try stdout.print("\n", .{});
+    }
+
+    // ----- direct lookup: "zombie" row -----
+    try stdout.print("\nLooking up 'zombie'...\n", .{});
+
+    const zombie = zdb.getRow(enemies, "zombie") orelse {
+        try stdout.print("No 'zombie' row found!\n", .{});
+        return;
+    };
+
+    if (zdb.getFieldValueByName(enemies, zombie, "hp")) |v| {
+        switch (v.*) {
+            .Int => |hp| try stdout.print("Zombie HP: {d}\n", .{hp}),
+            else => try stdout.print("Zombie hp is not an Int\n", .{}),
+        }
+    } else {
+        try stdout.print("Zombie has no hp field\n", .{});
     }
 }

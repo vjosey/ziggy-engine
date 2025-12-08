@@ -15,6 +15,15 @@ pub fn build(b: *std.Build) void {
 
     //
     // ────────────────────────────────────────────────
+    // ZiggyDB as a standalone module
+    // ────────────────────────────────────────────────
+    //
+    const ziggy_db_mod = b.addModule("ziggy_db", .{
+        .root_source_file = b.path("db/ziggy_db.zig"),
+    });
+
+    //
+    // ────────────────────────────────────────────────
     // 1. Ziggy Studio (editor executable)
     // ────────────────────────────────────────────────
     //
@@ -25,6 +34,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
     ziggy_studio.root_module.addImport("ziggy_core", ziggy_core_mod);
+    ziggy_studio.root_module.addImport("ziggy_db", ziggy_db_mod);
     b.installArtifact(ziggy_studio);
 
     // 🔗 GLFW + OpenGL – adjust to your paths
@@ -60,9 +70,25 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
     hello_core.root_module.addImport("ziggy_core", ziggy_core_mod);
+    hello_core.root_module.addImport("ziggy_db", ziggy_db_mod);
     b.installArtifact(hello_core);
 
     const run_hello = b.addRunArtifact(hello_core);
     if (b.args) |args| run_hello.addArgs(args);
     b.step("run-example", "Run hello_core example").dependOn(&run_hello.step);
+
+    //
+    // ────────────────────────────────────────────────
+    // 3. (Optional) ZiggyDB-only example or tests later
+    // ────────────────────────────────────────────────
+    //
+    // const ziggy_db_example = b.addExecutable(.{
+    //     .name = "ziggy_db_example",
+    //     .root_source_file = b.path("examples/ziggy_db_example/main.zig"),
+    //     .target = target,
+    //     .optimize = optimize,
+    // });
+    //
+    // ziggy_db_example.root_module.addImport("ziggy_db", ziggy_db_mod);
+    // b.installArtifact(ziggy_db_example);
 }
