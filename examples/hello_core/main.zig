@@ -1,6 +1,7 @@
 const std = @import("std");
 const ziggy_core = @import("ziggy_core");
 const zdb = @import("ziggy_db");
+const testdata = @import("test_data.zig");
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -18,6 +19,9 @@ pub fn main() !void {
     defer rt.deinit();
 
     const scene = &rt.scene;
+
+    // Run once to generate test data
+    try generateTestData(allocator);
 
     // Player
     const player = try scene.createEntity("Player");
@@ -130,4 +134,10 @@ fn dataConnection(allocator: std.mem.Allocator) !void {
     } else {
         try stdout.print("Zombie has no hp field\n", .{});
     }
+}
+
+fn generateTestData(allocator: std.mem.Allocator) !void {
+    try testdata.addExtraEnemiesAndSave(allocator);
+    try testdata.createWeaponsTableAndSave(allocator);
+    try testdata.createItemsTableAndSave(allocator);
 }

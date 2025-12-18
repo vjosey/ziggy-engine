@@ -1,0 +1,14 @@
+{
+  "table": "items",
+  "fields": {
+    "name": { "type": "String" },
+    "kind": { "type": "String" },
+    "power": { "type": "Int" },
+    "is_consumable": { "type": "Bool" }
+  },
+  "rows": {
+    "health_potion": { "name": "Health Potion", "kind": "consumable", "power": 50, "is_consumable": true },
+    "mana_potion": { "name": "Mana Potion", "kind": "consumable", "power": 40, "is_consumable": true },
+    "strength_amulet": { "name": "Amulet of Strength", "kind": "equipment", "power": 10, "is_consumable": false }
+  }
+}

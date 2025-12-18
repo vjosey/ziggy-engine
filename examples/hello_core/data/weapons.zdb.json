@@ -1,0 +1,14 @@
+{
+  "table": "weapons",
+  "fields": {
+    "name": { "type": "String" },
+    "damage": { "type": "Int" },
+    "range": { "type": "Int" },
+    "is_ranged": { "type": "Bool" }
+  },
+  "rows": {
+    "sword": { "name": "Sword", "damage": 15, "range": 1, "is_ranged": false },
+    "bow": { "name": "Bow", "damage": 10, "range": 6, "is_ranged": true },
+    "staff": { "name": "Staff", "damage": 8, "range": 4, "is_ranged": true }
+  }
+}

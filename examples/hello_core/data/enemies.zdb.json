@@ -1,27 +1,30 @@
 {
   "table": "enemies",
   "fields": {
-    "hp":       { "type": "Int" },
-    "speed":    { "type": "Float" },
-    "name":     { "type": "String" },
-    "rarity":   { "type": "Enum", "enum": "Rarity" },
-    "weapon":   { "type": "Ref", "table": "weapons" },
-    "tags":     { "type": "List", "element_type": "String" },
-    "loot":     { "type": "List", "element_type": "Ref", "table": "items" },
-    "meta":     { "type": "Json" }
+    "name": { "type": "String" },
+    "hp": { "type": "Int" },
+    "speed": { "type": "Int" }
   },
   "rows": {
-    "zombie": {
-      "hp": 50,
-      "speed": 0.8,
-      "name": "Zombie",
-      "rarity": "Common",
-      "weapon": "rusty_sword",
-      "tags": ["undead", "melee"],
-      "loot": ["rotten_flesh"],
-      "meta": { "aggro_range": 5.0 }
-    }
-
-    
+    "brute": { "name": "Brute", "hp": 80, "speed": 4 },
+    "ghoul": { "name": "Ghoul", "hp": 60, "speed": 6 },
+    "spitter": { "name": "Spitter", "hp": 40, "speed": 5 },
+    "tank": { "name": "Tank", "hp": 150, "speed": 2 },
+    "crawler": { "name": "Crawler", "hp": 25, "speed": 3 },
+    "witch": { "name": "Witch", "hp": 50, "speed": 7 },
+    "shadow": { "name": "Shadow", "hp": 35, "speed": 9 },
+    "stalker": { "name": "Stalker", "hp": 55, "speed": 8 },
+    "overlord": { "name": "Overlord", "hp": 200, "speed": 1 },
+    "swarmling": { "name": "Swarmling", "hp": 15, "speed": 10 },
+    "brute": { "name": "Brute", "hp": 80, "speed": 4 },
+    "ghoul": { "name": "Ghoul", "hp": 60, "speed": 6 },
+    "spitter": { "name": "Spitter", "hp": 40, "speed": 5 },
+    "tank": { "name": "Tank", "hp": 150, "speed": 2 },
+    "crawler": { "name": "Crawler", "hp": 25, "speed": 3 },
+    "witch": { "name": "Witch", "hp": 50, "speed": 7 },
+    "shadow": { "name": "Shadow", "hp": 35, "speed": 9 },
+    "stalker": { "name": "Stalker", "hp": 55, "speed": 8 },
+    "overlord": { "name": "Overlord", "hp": 200, "speed": 1 },
+    "swarmling": { "name": "Swarmling", "hp": 15, "speed": 10 }
   }
 }
