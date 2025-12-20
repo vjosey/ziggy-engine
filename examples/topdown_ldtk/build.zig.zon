@@ -1,0 +1,14 @@
+.{
+    .name = .topdown_ldtk,
+    .version = "0.1.0",
+    .fingerprint = 0x6fd70ecd9ab03246,
+    .dependencies = .{
+        .ziggy_core = .{ .path = "../../core" },
+        .ldtk = .{ .path = "../../importers/ldtk" },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}

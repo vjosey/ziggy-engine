@@ -24,6 +24,15 @@ pub fn build(b: *std.Build) void {
 
     //
     // ────────────────────────────────────────────────
+    // Ziggy LDtk as a standalone module
+    // ────────────────────────────────────────────────
+    //
+    const ldtk_mod = b.addModule("ldtk", .{
+        .root_source_file = b.path("importers/ldtk/compile.zig"),
+    });
+
+    //
+    // ────────────────────────────────────────────────
     // 1. Ziggy Studio (editor executable)
     // ────────────────────────────────────────────────
     //
