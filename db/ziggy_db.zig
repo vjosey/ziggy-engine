@@ -9,6 +9,10 @@ const save_mod = @import("save.zig");
 const validate_mod = @import("validate.zig");
 const deinit_mod = @import("deinit.zig");
 
+pub fn version() []const u8 {
+    return "ziggy_db 0.1.0-dev";
+}
+
 // Re-export core types
 pub const Database = types_mod.Database;
 pub const Table = types_mod.Table;

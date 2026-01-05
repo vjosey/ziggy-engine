@@ -11,8 +11,8 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    const core_dep = b.dependency("core", .{});
-    exe.root_module.addImport("core", core_dep.module("ziggy_core"));
+    const core_dep = b.dependency("ziggy_core", .{});
+    exe.root_module.addImport("ziggy_core", core_dep.module("ziggy_core"));
 
     const ldtk_dep = b.dependency("ldtk", .{});
     exe.root_module.addImport("ldtk", ldtk_dep.module("ldtk"));
@@ -21,5 +21,5 @@ pub fn build(b: *std.Build) void {
 
     const run_cmd = b.addRunArtifact(exe);
     if (b.args) |args| run_cmd.addArgs(args);
-    b.step("run", "Run the sample").dependOn(&run_cmd.step);
+    b.step("run", "Run topdown LDtk sample").dependOn(&run_cmd.step);
 }

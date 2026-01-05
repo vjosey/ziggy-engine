@@ -1,0 +1,7 @@
+.{
+    .name = .ziggy_core,
+    .version = "0.1.0",
+    .fingerprint = 0xbab9cf51f8291812,
+    .dependencies = .{},
+    .paths = .{ "build.zig", "build.zig.zon", "ziggy_core.zig" },
+}

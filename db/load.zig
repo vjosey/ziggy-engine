@@ -14,10 +14,6 @@ const LoadOptions = types.LoadOptions;
 const ListElementType = types.ListElementType;
 const FieldType = types.FieldType;
 
-pub fn version() []const u8 {
-    return "ziggy_db 0.1.0-dev";
-}
-
 pub fn loadFromDir(
     allocator: std.mem.Allocator,
     dir_path: []const u8,

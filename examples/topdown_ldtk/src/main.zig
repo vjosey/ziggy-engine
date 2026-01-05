@@ -1,5 +1,5 @@
 const std = @import("std");
-const core = @import("core");
+const core = @import("ziggy_core");
 const ldtk = @import("ldtk").ldtk;
 
 pub fn main() !void {

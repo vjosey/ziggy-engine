@@ -20,3 +20,13 @@ pub const support = struct {
     pub const math = @import("support/math.zig");
     pub const input = @import("support/input_glfw.zig");
 };
+
+pub const math = struct {
+    pub const vec2 = @import("math/vec2.zig");
+    pub const vec3 = @import("math/vec3.zig");
+    pub const quat = @import("math/quat.zig");
+    pub const mat4 = @import("math/mat4.zig");
+    pub const ray = @import("math/ray.zig");
+    pub const aabb = @import("math/aabb.zig");
+    pub const color = @import("math/color.zig");
+};

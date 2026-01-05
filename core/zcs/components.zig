@@ -1,5 +1,5 @@
 const std = @import("std");
-const math = @import("../support/math.zig");
+const math = @import("../math/math.zig");
 
 pub const EntityId = u32;
 

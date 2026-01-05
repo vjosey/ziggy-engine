@@ -1,0 +1,9 @@
+.{
+    .name = .ldtk,
+    .version = "0.1.0",
+    .fingerprint = 0x8e59f079824a29c3,
+    .dependencies = .{
+        .ziggy_core = .{ .path = "../../core" },
+    },
+    .paths = .{ "build.zig", "build.zig.zon", "compile.zig", "runtime_types.zig" },
+}
